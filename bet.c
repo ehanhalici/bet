@@ -28,8 +28,6 @@ typedef struct Cursor Cursor;
 typedef struct Page Page;
 typedef struct File File;
 
-//Row* türünde active row ekle adesini tut
-//BUG overflowları page den row a taşı ve her ilerlemede kontrol et
 struct Page
 {
 	Cursor *cursor;
@@ -440,7 +438,7 @@ void read_file(const char *file_name)
 	file.file_ptr = fopen(file.file_name, "r");
 
 	struct stat st;
-	if (stat(file_name, &st) == 0)
+	if (stat(file.file_name, &st) == 0)
 	{
 		if (st.st_size == 0)
 		{
@@ -527,7 +525,6 @@ static void sighandler(int signum)
 		print();
 		//clear buffer
 		while ((getch()) != 410 ); 
-		
 	}
 }
 
@@ -539,11 +536,11 @@ int main(int argc, char const *argv[])
 		return -1;
 	}
 
-	setlocale(LC_ALL, ""); //utf-8 dessteği
+	setlocale(LC_ALL, ""); 	//utf-8 dessteği
 	initscr();
-	raw();			  //tuşa basar basmaz eriş
-	noecho();			  //bastığım tuş gözükmesin
-	keypad(stdscr, true); //f ve ok tuşlarını etkinleştir
+	raw();			  		//tuşa basar basmaz eriş
+	noecho();			  	//bastığım tuş gözükmesin
+	keypad(stdscr, true); 	//f ve ok tuşlarını etkinleştir
 
 	init_editor();
 	read_file(argv[1]);
