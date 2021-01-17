@@ -56,7 +56,7 @@ struct Row
 
 struct File
 {
-	FILE* file_ptr;
+	FILE *file_ptr;
 	char *file_name;
 };
 File file;
@@ -240,17 +240,17 @@ int byte_number(unsigned int ch)
 		return -1;
 }
 
-unsigned int unicode_to_utf8(unsigned int ch,int input_device)
+unsigned int unicode_to_utf8(unsigned int ch, int input_device)
 {
 	int bytes = byte_number(ch);
 	unsigned int c = ch;
 	for (int i = 1; i < bytes; i++)
 	{
-		if(input_device == input_device_stdin)
+		if (input_device == input_device_stdin)
 			ch = getch();
-		else if(input_device == input_device_file)
+		else if (input_device == input_device_file)
 			ch = fgetc(file.file_ptr);
-		
+
 		c += ch << (8 * i);
 	}
 	return c;
@@ -383,7 +383,7 @@ int process_key(unsigned int ch, int input_device)
 	}
 	default:
 	{
-		ch = unicode_to_utf8(ch,input_device);
+		ch = unicode_to_utf8(ch, input_device);
 		add_ch(ch);
 		page.cursor->x += 1;
 		page.cursor->lastX = -1;
@@ -431,7 +431,6 @@ void print()
 	refresh();
 }
 
-
 void read_file(const char *file_name)
 {
 	file.file_name = strdup(file_name);
@@ -452,9 +451,9 @@ void read_file(const char *file_name)
 		ch = fgetc(file.file_ptr);
 		while (ch != EOF)
 		{
-			process_key(ch,input_device_file);
+			process_key(ch, input_device_file);
 			ch = fgetc(file.file_ptr);
-		} 
+		}
 		print();
 		fclose(file.file_ptr);
 	}
@@ -471,7 +470,7 @@ void save_file()
 	int start_y = 0;
 	int end_y = 0;
 
-	while (ptr != NULL )
+	while (ptr != NULL)
 	{
 		end_y = page.max_x - 1 > ptr->length ? ptr->length : page.max_x - 1;
 		start_y = page.cursor->x > page.max_x - 1 ? page.cursor->x - (page.max_x - 1) : 0;
@@ -512,6 +511,34 @@ void init_editor()
 	page.screen_y = 0;
 }
 
+void destroy()
+{
+	Row *ptr = page.row;
+	Row *temp;
+	while (ptr != NULL)
+	{
+		temp = ptr;
+		ptr = ptr->next;
+		free(temp->line);
+		free(temp);
+	}
+	page.row = (Row *)malloc(sizeof(Row));
+	page.row->line = (wchar *)malloc(sizeof(wchar));
+	page.row->line[0] = '\0';
+	page.row->next = NULL;
+	page.row->length = 0;
+	page.row_count = 1;
+
+	page.cursor->y = 0;
+	page.cursor->x = 0;
+	page.cursor->lastX = -1;
+
+	getmaxyx(stdscr, page.max_y, page.max_x);
+	page.max_x = page.max_x / 2 - 1;
+	page.screen_x = page.max_x;
+	page.screen_y = 0;
+}
+
 static void sighandler(int signum)
 {
 	if (SIGWINCH == signum)
@@ -524,7 +551,8 @@ static void sighandler(int signum)
 		//page.screen_y = 0;
 		print();
 		//clear buffer
-		while ((getch()) != 410 ); 
+		while ((getch()) != 410)
+			;
 	}
 }
 
@@ -536,11 +564,11 @@ int main(int argc, char const *argv[])
 		return -1;
 	}
 
-	setlocale(LC_ALL, ""); 	//utf-8 dessteği
+	setlocale(LC_ALL, ""); //utf-8 dessteği
 	initscr();
-	raw();			  		//tuşa basar basmaz eriş
-	noecho();			  	//bastığım tuş gözükmesin
-	keypad(stdscr, true); 	//f ve ok tuşlarını etkinleştir
+	raw();				  //tuşa basar basmaz eriş
+	noecho();			  //bastığım tuş gözükmesin
+	keypad(stdscr, true); //f ve ok tuşlarını etkinleştir
 
 	init_editor();
 	read_file(argv[1]);
@@ -551,10 +579,11 @@ int main(int argc, char const *argv[])
 	while (1 == 1)
 	{
 		ch = getch();
-		process_key(ch,input_device_stdin);
+		process_key(ch, input_device_stdin);
 		if (ioctl(0, FIONREAD, &n) == 0 && n == 0)
 			print();
 	}
+	destroy();
 	endwin();
 	return 0;
 }
